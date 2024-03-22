@@ -150,16 +150,7 @@ async def delete_cart(id):
 @cart.post('/paypal/create-order', dependencies=[Depends(jwtBearer())])
 async def createPaypalOrder(order: object = Body(default=None)):
     try:
-        accessToken = await generate_access_token()
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {accessToken}",
-        }
-
-        async with httpx.AsyncClient(base_url=PAYPAL_BASE_URL, headers=headers) as client:
-            response = await client.post("/v2/checkout/orders", json=order)
-
-            return response.json()
+        print(order)
     except:
         return {'success': False}
 

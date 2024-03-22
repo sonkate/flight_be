@@ -6,6 +6,7 @@ from bson import ObjectId
 from provider.jwtProvider import jwtBearer
 from provider.authProvider import get_userId_from_request
 from routes.ticket import get_ticket_detail
+
 import datetime
 from decouple import config
 import httpx
@@ -57,36 +58,37 @@ async def add_booking(booking: Booking, Authorization: str = Header(default=None
         bookingData['ticketId'] = ObjectId(booking.ticketId)
         bookingData['userId'] = userId
         bookingData['created_at'] = datetime.datetime.now()
+        print(userId, bookingData)
         db.booking.insert_one(bookingData)
 
         ticketData = await get_ticket_detail(booking.ticketId)
-
-        async with httpx.AsyncClient(base_url=GHN_BASE_URL, headers={"ShopId": GHN_SHOP_ID, "Token": GHN_TOKEN, "Content-Type": "application/json"}) as client:
-            data = {
-                "required_note": "KHONGCHOXEMHANG",
-                "payment_type_id": 2,
-                "to_name": booking.email,
-                "to_phone": booking.phone,
-                "to_address": "268 Lý Thường Kiệt, Phường 14, Quận 10, Hồ Chí Minh, Vietnam",
-                "to_ward_code": "21311",
-                "to_district_id": 1461,
-                "service_id": 100039,
-                "service_type_id": 2,
-                "weight": 200,
-                "length": 20,
-                "width": 5,
-                "height": 2,
-                "items": [
-                    {
-                        "name": ticketData["flightId"],
-                        "code": booking.ticketId,
-                        "quantity": 1,
-                        "price": int(ticketData["price"]),
-                        "weight": 200,
-                    }
-                ]
-            }
-            await client.post("/shipping-order/create", data=json.dumps(data))
+        print(ticketData)
+        # async with httpx.AsyncClient(base_url=GHN_BASE_URL, headers={"ShopId": GHN_SHOP_ID, "Token": GHN_TOKEN, "Content-Type": "application/json"}) as client:
+        #     data = {
+        #         "required_note": "KHONGCHOXEMHANG",
+        #         "payment_type_id": 2,
+        #         "to_name": booking.email,
+        #         "to_phone": booking.phone,
+        #         "to_address": "268 Lý Thường Kiệt, Phường 14, Quận 10, Hồ Chí Minh, Vietnam",
+        #         "to_ward_code": "21311",
+        #         "to_district_id": 1461,
+        #         "service_id": 100039,
+        #         "service_type_id": 2,
+        #         "weight": 200,
+        #         "length": 20,
+        #         "width": 5,
+        #         "height": 2,
+        #         "items": [
+        #             {
+        #                 "name": ticketData["flightId"],
+        #                 "code": booking.ticketId,
+        #                 "quantity": 1,
+        #                 "price": int(ticketData["price"]),
+        #                 "weight": 200,
+        #             }
+        #         ]
+        #     }
+        #     await client.post("/shipping-order/create", data=json.dumps(data))
         return {"success": True,
                 "message": "Booking added successfully"}
     except Exception as error:

@@ -12,20 +12,24 @@ import datetime
 import base64
 from decouple import config
 import httpx
+import aiohttp
 from models.CustomBaseModels import CustomBaseModel
+
+from routes.voucher import get_voucher_detail
 
 import secrets
 # PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
 # PAYPAL_CLIENT_SECRET = config('PAYPAL_CLIENT_SECRET')
+SECRET_KEY = 'secret_key123'
 BLOCKCHAIN_BASE_URL = "https://on-shop-blockchain.onrender.com"
-API_KEY = 'dCQEI4C7ADRvlx-c7_1dNRP8dcESHa9kBsaQ2Lf5zXU='
-PARTNER_CODE = 'fc193dfc78009398babab0c25ce79a29'
+API_KEY = 'dbLO7G_Qmm2d7nqN4vV8gkn5zufbkfg876sck0RXPhU='
+PARTNER_CODE = '18b56937c0d72ebd1e978afd15650c70'
 cart = APIRouter()
 
 
 def create_signature(body, api_key):
     message = json.dumps(body) + api_key
-    signature = hmac.new(config.SECRET_KEY.encode(), message.encode(), hashlib.sha256).hexdigest()
+    signature = hmac.new(SECRET_KEY.encode(), message.encode(), hashlib.sha256).hexdigest()
     return signature
 
 @cart.get('', dependencies=[Depends(jwtBearer())])
@@ -122,29 +126,44 @@ async def delete_cart(id):
 
 @cart.post('/paypal/create-order', dependencies=[Depends(jwtBearer())])
 async def createBlockChainOrder(order: object = Body(default=None)):
-    try:
-        if order is None:
-            print('order is none')
-        print('order: ',order)
-        amount = order['amount']
-        currency = order['currency']
-        # call api
-        data = {
-            'amount': amount,
-            'currency': currency,
-            'order_id': secrets.token_hex(12)
-        }
-        sign = create_signature(data, API_KEY)
-        headers = {
-            'merchant': PARTNER_CODE,
-            'sign': sign
-        }
+    if order is None:
+        print('order is none')
+    print('order: ',order)
+    ticketId = order['ticketId']
+    voucher_detail = await get_voucher_detail(ticketId)
+    print('voucher_detail: ',voucher_detail)
+    # call api
+    data = {
+        'amount': voucher_detail['salePrice'],
+        'currency': 'VNDT',
+        'order_id': secrets.token_hex(12)
+    }
+    sign = create_signature(data, API_KEY)
+    headers = {
+        'merchant': PARTNER_CODE,
+        'sign': sign,
+        'api_key': API_KEY
+    }
 
-        async with httpx.AsyncClient(base_url=BLOCKCHAIN_BASE_URL, headers=headers) as client:
-            response = await client.post("/get_order_input", json=order)
-            return response.json()
-    except:
-        return {'success': False}
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f'{BLOCKCHAIN_BASE_URL}/get_order_input', json=data, headers=headers, timeout=60) as response:
+                # Check if the request was successful
+                if response.status == 200:
+                    text = await response.json()
+                    return text
+                elif response.status == 400:
+                    error_message = await response.text()
+                    print(f"Error: Received status code 400 with message: {error_message}")
+                else:
+                    # Handle other unsuccessful response codes
+                    print(f"Error: Received status code {response.status}")
+                    return None
+    except Exception as e:
+        # Handle exceptions that may occur during the request
+        print(f"Error: {str(e)}")
+        return None
+    
 
 
 # @cart.post('/paypal/approve-order', dependencies=[Depends(jwtBearer())])
