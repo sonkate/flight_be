@@ -22,8 +22,8 @@ import secrets
 # PAYPAL_CLIENT_SECRET = config('PAYPAL_CLIENT_SECRET')
 SECRET_KEY = 'secret_key123'
 BLOCKCHAIN_BASE_URL = "https://on-shop-blockchain.onrender.com"
-API_KEY = 'dbLO7G_Qmm2d7nqN4vV8gkn5zufbkfg876sck0RXPhU='
-PARTNER_CODE = '18b56937c0d72ebd1e978afd15650c70'
+API_KEY = 'enBWafDO3SxLlfK90fGWSxRSGESGrBkrloCuRCu6K6Q'
+PARTNER_CODE = '5c36210ae5b06ad5c7b387931582feef'
 cart = APIRouter()
 
 
