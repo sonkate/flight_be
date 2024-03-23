@@ -134,8 +134,9 @@ async def createBlockChainOrder(order: object = Body(default=None)):
     print('voucher_detail: ',voucher_detail)
     # call api
     data = {
+        'order_name': voucher_detail['brand'],
         'amount': voucher_detail['salePrice'],
-        'currency': 'VNDT',
+        'currency': 'USDT',
         'order_id': secrets.token_hex(12)
     }
     sign = create_signature(data, API_KEY)
