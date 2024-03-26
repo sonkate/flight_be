@@ -11,15 +11,12 @@ from provider.jwtProvider import jwtBearer
 import datetime
 import base64
 from decouple import config
-import httpx
 import aiohttp
 from models.CustomBaseModels import CustomBaseModel
 
 from routes.voucher import get_voucher_detail
 
 import secrets
-# PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
-# PAYPAL_CLIENT_SECRET = config('PAYPAL_CLIENT_SECRET')
 SECRET_KEY = 'secret_key123'
 BLOCKCHAIN_BASE_URL = "https://on-shop-blockchain.onrender.com"
 API_KEY = 'enBWafDO3SxLlfK90fGWSxRSGESGrBkrloCuRCu6K6Q'
@@ -152,6 +149,7 @@ async def createBlockChainOrder(order: object = Body(default=None)):
                 # Check if the request was successful
                 if response.status == 200:
                     text = await response.json()
+                    payment_link = request.url_for("payment_page", amount=amount, _external=True)
                     return text
                 elif response.status == 400:
                     error_message = await response.text()
