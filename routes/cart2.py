@@ -149,7 +149,7 @@ async def createBlockChainOrder(order: object = Body(default=None)):
                 # Check if the request was successful
                 if response.status == 200:
                     text = await response.json()
-                    payment_link = request.url_for("payment_page", amount=amount, _external=True)
+                    # payment_link = request.url_for("payment_page", amount=amount, _external=True)
                     return text
                 elif response.status == 400:
                     error_message = await response.text()
